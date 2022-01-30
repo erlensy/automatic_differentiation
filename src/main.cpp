@@ -102,7 +102,52 @@ void gradient_descent(double* p, double* gradient,
     write_variables(p, n_parameters);
 }
 
+void test_scenario() {
+    // set beta value
+    double beta = 40.0;
+
+    // init parameters
+    int n_parameters = 5;
+    double parameters[n_parameters];
+    double A1 = 2.5; double B1 = 1.0;
+    double A2 = 0.9; double B2 = 1.1;
+    set_delta_functions(parameters, n_parameters, A1, A2, B1, B2);
+
+    // init data
+    int n_data = 100;
+    double tau[n_data];
+    double s[n_data];
+    for (int i = 0; i < n_data; i++) {
+        tau[i] = i / (n_data - 1.0);
+        s[i] = 0.0;
+        for (int j = 0; j < n_parameters; j+=2) {
+            double A_j = parameters[j]; double B_j = parameters[j+1];
+            s[i] += (A_j / M_PI) * (exp(-B_j * beta * tau[i]) + exp(-B_j * beta * (1 - tau[i]))) / (1 - exp(-beta * B_j));    
+        }
+    }
+
+    // write data to file
+    std::ofstream out;
+    out.open("data_test.txt");
+    out << "i tau, s";
+    for (int i = 0; i < n_data; i++) {
+        out << "\n" << tau[i] << " " << s[i];
+    }
+    out.close();
+
+    // perform gradient_descent
+    gradient_descent(parameters, gradient,
+                      tau, s, error, 
+                      beta, n_parameters, n_data);
+    
+}
+
+
 int main() {
+    test_scenario();
+}
+    
+    /*
     // PARAMETERS
     int n_parameters = 4;
     double parameters[n_parameters];
@@ -119,4 +164,5 @@ int main() {
     gradient_descent(parameters, gradient,
                       tau, s, error, 
                       beta, n_parameters, n_data);
-}
+
+    */
