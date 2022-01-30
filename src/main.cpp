@@ -76,8 +76,8 @@ void gradient_descent(double* p, double* gradient,
                       double* tau, double* s, double* error, 
                       double beta, int n_parameters, int n_data) {
 
-    double descent_rate = 0.01;
-    int steps = 100;
+    double descent_rate = 0.000000001;
+    int steps = 1;
     double values[steps];
 
     for (int i = 0; i < steps; i++) {
@@ -88,10 +88,12 @@ void gradient_descent(double* p, double* gradient,
         values[i] = differentiate(p, gradient,
                                   tau, s, error,
                                   &beta, &n_parameters, &n_data);
+        std::cout << values[i];
 
         for (int k = 0; k < n_parameters; k++) {
             p[k] -= gradient[k] * descent_rate;
         }
+
 
         // b skal ikke være negativ
         // a skal ikke være negativ
@@ -99,29 +101,30 @@ void gradient_descent(double* p, double* gradient,
     }
 
     write_values(values, steps);
-    write_variables(p, n_parameters);
 }
 
 void test_scenario() {
     // set beta value
     double beta = 40.0;
 
-    // init parameters
-    int n_parameters = 5;
-    double parameters[n_parameters];
-    double A1 = 2.5; double B1 = 1.0;
-    double A2 = 0.9; double B2 = 1.1;
-    set_delta_functions(parameters, n_parameters, A1, A2, B1, B2);
+    // init parameters for correct data
+    int n_parameters = 4;
+    double parameters_correct[n_parameters];
+    double A1 = 2.5; double B1 = 0.5;
+    double A2 = 0.9; double B2 = 1.5;
+    set_delta_functions(parameters_correct, n_parameters, A1, A2, B1, B2);
 
     // init data
     int n_data = 100;
     double tau[n_data];
     double s[n_data];
+    double error[n_data];
     for (int i = 0; i < n_data; i++) {
-        tau[i] = i / (n_data - 1.0);
+        tau[i] = i / (n_data*1.0);
+        error[i] = 0.0;
         s[i] = 0.0;
         for (int j = 0; j < n_parameters; j+=2) {
-            double A_j = parameters[j]; double B_j = parameters[j+1];
+            double A_j = parameters_correct[j]; double B_j = parameters_correct[j+1];
             s[i] += (A_j / M_PI) * (exp(-B_j * beta * tau[i]) + exp(-B_j * beta * (1 - tau[i]))) / (1 - exp(-beta * B_j));    
         }
     }
@@ -129,17 +132,29 @@ void test_scenario() {
     // write data to file
     std::ofstream out;
     out.open("data_test.txt");
-    out << "i tau, s";
+    out << "tau, s";
     for (int i = 0; i < n_data; i++) {
         out << "\n" << tau[i] << " " << s[i];
     }
+
     out.close();
+    out.open("variables_correct.txt");
+    out << "A, B";
+    for (int i = 0; i < n_parameters; i+=2) {
+        out << "\n" << parameters_correct[i] << " " << parameters_correct[i+1];
+    }
+
+    // init parameters
+    double parameters[n_parameters];
+    double gradient[n_parameters];
+    set_delta_functions(parameters, n_parameters, 10.0, 0.1, 0.8, 1.5);
 
     // perform gradient_descent
     gradient_descent(parameters, gradient,
                       tau, s, error, 
                       beta, n_parameters, n_data);
-    
+
+    write_variables(parameters, n_parameters);
 }
 
 
