@@ -100,6 +100,7 @@ void gradient_descent(double* p, double* gradient,
 
     }
 
+    write_variables(p, n_parameters);
     write_values(values, steps);
 }
 
@@ -150,11 +151,10 @@ void test_scenario() {
     set_delta_functions(parameters, n_parameters, 10.0, 0.1, 0.8, 1.5);
 
     // perform gradient_descent
+
     gradient_descent(parameters, gradient,
                       tau, s, error, 
                       beta, n_parameters, n_data);
-
-    write_variables(parameters, n_parameters);
 }
 
 

@@ -11,8 +11,8 @@ if __name__ == '__main__':
     A1, B1 = list(map(float, variables[1].strip().split(" ")))[1::]
     A2, B2 = list(map(float, variables[2].strip().split(" ")))[1::]
 
-    plt.plot([B1_corr, B1_corr], [0.0, A1_corr], label = "correct", color = "blue")
-    plt.plot([B2_corr, B2_corr], [0.0, A2_corr], color = "blue")
+    plt.plot([B1_corr, B1_corr], [0.0, A1_corr], label = "correct", linewidth = 4, color = "blue")
+    plt.plot([B2_corr, B2_corr], [0.0, A2_corr], color = "blue", linewidth = 4)
 
     plt.plot([B1, B1], [0.0, A1], label = "simulated", color = "red")
     plt.plot([B2, B2], [0.0, A2], color = "red")
