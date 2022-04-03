@@ -1,7 +1,7 @@
-# Automatic differentiation library:
 
-**https://enzyme.mit.edu/**
 
-To be done:
-change structure to double with double[] (array)
+Automatic differentiation: **https://enzyme.mit.edu/**
+
+Optimizer: **https://arxiv.org/pdf/1412.6980.pdf**
+
 
