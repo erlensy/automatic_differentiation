@@ -1,5 +1,4 @@
 #include "enzyme.h"
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -72,12 +71,51 @@ void set_delta_functions(double* p, int n,
     }
 }
 
+void adam(double* p, double* gradient,
+          double* tau, double* s, double* error, 
+          double beta, int n_parameters, int n_data) {
+    // variables------- //
+    int steps = 100000;
+    double alpha = 0.001;
+    double beta1 = 0.9; 
+    double beta2 = 0.999;
+    double epsilon = 1e-8;
+    // ----------------- //
+    
+    double m[n_parameters];
+    double v[n_parameters];
+    for (int i = 0; i < n_parameters; i++) {
+        m[i] = 0.0;
+        v[i] = 0.0;
+    }
+    double values[steps];
+    for (int i = 1; i < steps + 1; i++) {
+        values[i] = differentiate(p, gradient,
+                                  tau, s, error,
+                                  &beta, &n_parameters, &n_data);
+        for (int j = 0; j < n_parameters; j++) {
+            m[j] = beta1 * m[j] + (1.0 - beta1) * gradient[j];
+            v[j] = beta2 * v[j] + (1.0 - beta2) * gradient[j] * gradient[j];
+            double m_t = m[j] / (1.0 - pow(beta1, i));
+            double v_t = v[j] / (1.0 - pow(beta2, i));
+            p[j] -= alpha * m_t / (sqrt(v_t) + epsilon);
+            if (p[j] <= 0.0) {
+                p[j] = 1.0;
+            }
+            gradient[j] = 0.0;
+        }
+    }
+    write_variables(p, n_parameters);
+    write_values(values, steps);
+}
+
+
 void gradient_descent(double* p, double* gradient,
                       double* tau, double* s, double* error, 
                       double beta, int n_parameters, int n_data) {
 
-    double descent_rate = 0.000000001;
-    int steps = 1;
+    double descent_rate = 0.00000001;
+    int steps = 1000;
     double values[steps];
 
     for (int i = 0; i < steps; i++) {
@@ -93,8 +131,6 @@ void gradient_descent(double* p, double* gradient,
         for (int k = 0; k < n_parameters; k++) {
             p[k] -= gradient[k] * descent_rate;
         }
-
-
         // b skal ikke være negativ
         // a skal ikke være negativ
 
@@ -105,79 +141,22 @@ void gradient_descent(double* p, double* gradient,
 }
 
 void test_scenario() {
-    // set beta value
-    double beta = 40.0;
-
-    // init parameters for correct data
-    int n_parameters = 4;
-    double parameters_correct[n_parameters];
-    double A1 = 2.5; double B1 = 0.5;
-    double A2 = 0.9; double B2 = 1.5;
-    set_delta_functions(parameters_correct, n_parameters, A1, A2, B1, B2);
-
-    // init data
-    int n_data = 100;
-    double tau[n_data];
-    double s[n_data];
-    double error[n_data];
-    for (int i = 0; i < n_data; i++) {
-        tau[i] = i / (n_data*1.0);
-        error[i] = 0.0;
-        s[i] = 0.0;
-        for (int j = 0; j < n_parameters; j+=2) {
-            double A_j = parameters_correct[j]; double B_j = parameters_correct[j+1];
-            s[i] += (A_j / M_PI) * (exp(-B_j * beta * tau[i]) + exp(-B_j * beta * (1 - tau[i]))) / (1 - exp(-beta * B_j));    
-        }
-    }
-
-    // write data to file
-    std::ofstream out;
-    out.open("data_test.txt");
-    out << "tau, s";
-    for (int i = 0; i < n_data; i++) {
-        out << "\n" << tau[i] << " " << s[i];
-    }
-
-    out.close();
-    out.open("variables_correct.txt");
-    out << "A, B";
-    for (int i = 0; i < n_parameters; i+=2) {
-        out << "\n" << parameters_correct[i] << " " << parameters_correct[i+1];
-    }
-
     // init parameters
+    int n_parameters = 20;
+    double beta = 40.0;
     double parameters[n_parameters];
     double gradient[n_parameters];
-    set_delta_functions(parameters, n_parameters, 10.0, 0.1, 0.8, 1.5);
+    set_delta_functions(parameters, n_parameters, 0.1, 20.0, 0.8, 1.5);
 
-    // perform gradient_descent
-
-    gradient_descent(parameters, gradient,
+    std::string filename = "../data/beta_40_test.txt";
+    int n_data = length_of_data(filename);
+    double tau[n_data]; double s[n_data]; double error[n_data];
+    read_data(filename, tau, s, error);
+    adam(parameters, gradient,
                       tau, s, error, 
                       beta, n_parameters, n_data);
 }
-
 
 int main() {
     test_scenario();
 }
-    
-    /*
-    // PARAMETERS
-    int n_parameters = 4;
-    double parameters[n_parameters];
-    set_delta_functions(parameters, n_parameters, 2.5, 1.0, 0.9, 1.1);
-    double gradient[n_parameters];
-
-    // DATA
-    double beta = 40.0;
-    std::string filename = "../data/beta_40.txt";
-    int n_data = length_of_data(filename);
-    double tau[n_data]; double s[n_data]; double error[n_data];
-    read_data(filename, tau, s, error); 
-
-    gradient_descent(parameters, gradient,
-                      tau, s, error, 
-                      beta, n_parameters, n_data);
-
-    */
