@@ -1,12 +1,10 @@
 #include "enzyme.h"
-
 #include <cmath>
 
 int enzyme_dup;
 int enzyme_out;
 int enzyme_const;
 
-//
 double cost_function(double* p, 
                      double* tau, double* s, double* error,
                      double* beta, int* n_parameters, int* n_data) {
@@ -25,20 +23,6 @@ double cost_function(double* p,
     chi_square /= *n_data;
     return chi_square;
 }
-//
-
-// TEST COST FUNCTION:
-/*
-double cost_function(double* p, 
-                     double* tau, double* s, double* error,
-                     double* beta, int* n_parameters, int* n_data) {
-    double sum = 0;
-    for (int i = 0; i < *n_parameters; i++) {
-        sum += pow(p[i] - tau[i], 2);
-    }
-    return sum;
-}
-*/
 
 double differentiate(double* p, double* grad, 
                      double* tau, double* s, double* error,
