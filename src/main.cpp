@@ -74,85 +74,90 @@ void set_delta_functions(double* p, int n,
 void adam(double* p, double* gradient,
           double* tau, double* s, double* error, 
           double beta, int n_parameters, int n_data) {
-    // variables------- //
-    int steps = 100000;
+    // ---variables---- //
+    int steps = 10000000;
+    double alpha = 0.0001;
+    double beta1 = 0.9; 
+    double beta2 = 0.999;
+    double epsilon = 1e-7;
+    // ----------------- //
+    double m[n_parameters], v[n_parameters], values[steps];
+    for (int i = 0; i < n_parameters; i++) {
+        m[i] = 0.0; v[i] = 0.0;
+    }
+    for (int i = 0; i < steps; i++) {
+        differentiate(p, gradient,
+                      tau, s, error,
+                      &beta, &n_parameters, &n_data);
+        
+        for (int j = 0; j < n_parameters; j++) {
+            m[j] = beta1 * m[j] + (1.0 - beta1) * gradient[j];
+            v[j] = beta2 * v[j] + (1.0 - beta2) * gradient[j] * gradient[j];
+            double m_t = m[j] / (1.0 - pow(beta1, i+1));
+            double v_t = v[j] / (1.0 - pow(beta2, i+1));
+            p[j] -= alpha * m_t / (sqrt(v_t) + epsilon);
+            if (p[j] < 0.0) {
+                p[j] = 0.001;
+            }
+            gradient[j] = 0.0;
+        }
+
+        if (i % 100000) {
+            std::cout << cost_function(p, tau, s, error, &beta, &n_parameters, &n_data) << "\n";
+        }
+    }
+    write_variables(p, n_parameters);
+}
+
+void nadam(double* p, double* gradient,
+          double* tau, double* s, double* error, 
+          double beta, int n_parameters, int n_data) {
+    // ---variables---- //
+    int steps = 10000000;
     double alpha = 0.001;
     double beta1 = 0.9; 
     double beta2 = 0.999;
     double epsilon = 1e-8;
     // ----------------- //
-    
-    double m[n_parameters];
-    double v[n_parameters];
+    double m[n_parameters], v[n_parameters], values[steps];
     for (int i = 0; i < n_parameters; i++) {
-        m[i] = 0.0;
-        v[i] = 0.0;
+        m[i] = 0.0; v[i] = 0.0;
     }
-    double values[steps];
-    for (int i = 1; i < steps + 1; i++) {
-        values[i] = differentiate(p, gradient,
-                                  tau, s, error,
-                                  &beta, &n_parameters, &n_data);
+    for (int i = 0; i < steps; i++) {
+        differentiate(p, gradient,
+                      tau, s, error,
+                      &beta, &n_parameters, &n_data);
+        
         for (int j = 0; j < n_parameters; j++) {
             m[j] = beta1 * m[j] + (1.0 - beta1) * gradient[j];
-            v[j] = beta2 * v[j] + (1.0 - beta2) * gradient[j] * gradient[j];
-            double m_t = m[j] / (1.0 - pow(beta1, i));
-            double v_t = v[j] / (1.0 - pow(beta2, i));
-            p[j] -= alpha * m_t / (sqrt(v_t) + epsilon);
-            if (p[j] <= 0.0) {
-                p[j] = 1.0;
+            double m_t = m[j] / (1.0 - pow(beta1, i+1));
+            double v_t = beta2 * v[j] + (1.0 - beta2) * gradient[j] * gradient[j];
+            p[j] -= alpha * m_t / (sqrt(std::max(v_t, v[j])) + epsilon);
+            v[j] = v_t;
+            if (p[j] < 0.0) {
+                p[j] = 0.001;
             }
             gradient[j] = 0.0;
         }
+
+        if (i % 100000) {
+            std::cout << cost_function(p, tau, s, error, &beta, &n_parameters, &n_data) << "\n";
+        }
     }
     write_variables(p, n_parameters);
-    write_values(values, steps);
 }
-
-
-void gradient_descent(double* p, double* gradient,
-                      double* tau, double* s, double* error, 
-                      double beta, int n_parameters, int n_data) {
-
-    double descent_rate = 0.00000001;
-    int steps = 1000;
-    double values[steps];
-
-    for (int i = 0; i < steps; i++) {
-        for (int j = 0; j < n_parameters; j++) {
-            gradient[j] = 0.0;
-        }
-
-        values[i] = differentiate(p, gradient,
-                                  tau, s, error,
-                                  &beta, &n_parameters, &n_data);
-        std::cout << values[i];
-
-        for (int k = 0; k < n_parameters; k++) {
-            p[k] -= gradient[k] * descent_rate;
-        }
-        // b skal ikke være negativ
-        // a skal ikke være negativ
-
-    }
-
-    write_variables(p, n_parameters);
-    write_values(values, steps);
-}
-
 void test_scenario() {
-    // init parameters
     int n_parameters = 20;
     double beta = 40.0;
     double parameters[n_parameters];
     double gradient[n_parameters];
-    set_delta_functions(parameters, n_parameters, 0.1, 20.0, 0.8, 1.5);
+    set_delta_functions(parameters, n_parameters, 0.1, 10.0, 0.8, 1.5);
 
     std::string filename = "../data/beta_40_test.txt";
     int n_data = length_of_data(filename);
     double tau[n_data]; double s[n_data]; double error[n_data];
     read_data(filename, tau, s, error);
-    adam(parameters, gradient,
+    nadam(parameters, gradient,
                       tau, s, error, 
                       beta, n_parameters, n_data);
 }
