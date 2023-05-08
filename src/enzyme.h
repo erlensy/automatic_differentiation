@@ -15,6 +15,6 @@ double __enzyme_autodiff(double(*)(double*,
         int, int*,
         int, int*);
 
-double differentiate(double* p, double* grad, 
+void differentiate(double* p, double* grad, 
                      double* tau, double* s, double* errror,
                      double* beta, int* n_parameters, int* n_data);

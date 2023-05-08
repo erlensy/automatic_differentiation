@@ -12,10 +12,10 @@ double cost_function(double* p,
     double chi_square = 0.0;
     double sum, A, B;
     for (int i = 0; i < *n_data; i++) { 
-        sum = 0;
+        sum = 0.0;
         for (int j = 0; j < *n_parameters; j += 2) {
             A = p[j]; B = p[j+1];
-            sum += A * (exp(-*(beta) * B * tau[i]) + exp(*(beta) * B * (tau[i]-1.0))) / (1 - exp(- *(beta) * B));
+            sum += A * (exp(-*(beta) * B * tau[i]) + exp(*(beta) * B * (tau[i]-1.0))) / (1.0 - exp(-(*(beta) * B)));
         }
         sum /= M_PI;
         chi_square += pow((s[i] - sum) / error[i], 2);
@@ -24,11 +24,11 @@ double cost_function(double* p,
     return chi_square;
 }
 
-double differentiate(double* p, double* grad, 
+void differentiate(double* p, double* grad, 
                      double* tau, double* s, double* error,
                      double* beta, int* n_parameters, int* n_data) {
 
-    double value = __enzyme_autodiff(cost_function, 
+    __enzyme_autodiff(cost_function, 
             enzyme_dup, p, grad,
             enzyme_const, tau, 
             enzyme_const, s,
@@ -36,6 +36,4 @@ double differentiate(double* p, double* grad,
             enzyme_const, beta,
             enzyme_const, n_parameters,
             enzyme_const, n_data);
-
-    return value;
 }
