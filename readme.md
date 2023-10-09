@@ -1,4 +1,4 @@
-# Optimization of a cost function using AD
+# Optimization AD
 
 ## Current state:
 
